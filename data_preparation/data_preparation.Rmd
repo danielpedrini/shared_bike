@@ -1,0 +1,18 @@
+---
+title: "Data Preparation"
+author: "Daniel Pedrini"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+### Fonte dos dados
+
+Os dados foram retirados da seguntinte fonte de dados: <https://divvy-tripdata.s3.amazonaws.com/index.html> Os mesmos foram disponibilizados pela **Motivate International Inc.**
+
+### Contrato de Licença
+
+Os dados estão sob o contrato de licença que se encontra no link abaixo: <https://ride.divvybikes.com/data-license-agreement>
+
+### Sobre a Privacidade dos Dados
+
+Esses são dados públicos que podem ser usados para explorar como os diferentes tipos de clientes estão utilizando as bicicletas da Cyclistic. Entretanto, observe que problemas de privacidade de dados o proíbem de usar as informações de identificação pessoal dos passageiros. Ou seja, você não poderá conectar compras de passes a números de cartão de crédito para determinar se passageiros casuais moram na área de serviço da Cyclistic ou se compraram vários passes únicos. Na análise que vamos apresentar, não apresentaremos nenhuma informação de cunho pessoal. Não serão utilizados, apresentados, nomes, numeros de cartões de créditos, números de cartões de membors, números sociais, redes sociais, ou quaisquer outras informações que possam identificar pessoalmente alguém.

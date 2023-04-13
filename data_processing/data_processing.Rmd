@@ -1,0 +1,105 @@
+---
+title: "Data Processing"
+author: "Daniel Pedrini"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+### Instanciando as bibliotecas
+```{r libraries, echo=FALSE, message=FALSE, warning=FALSE}
+library(dplyr)
+library(lubridate)
+```
+
+### Criando o Data Frame com os dados brutos
+```{r dataframe raw, echo=FALSE, message=FALSE, warning=FALSE}
+data_folder <- "../data/raw/"
+files <- list.files(data_folder, pattern = ".csv", full.names = TRUE)
+df_raw <- data.frame()
+
+
+for (file in files) {
+  data <- read.csv(file)
+  df_raw <- bind_rows(df_raw, data)
+}
+```
+
+### Verificando as colunas que possuem valores nulos
+```{r column with null values, echo=FALSE, message=FALSE, warning=FALSE}
+col_with_null <- colnames(df_raw)[colSums(is.na(df_raw)) > 0]
+cat("Colunas com valores nulos", sep = "\n")
+for (col in col_with_null) {
+  cat(col, ": ", sum(is.na(df_raw[[col]])), "\n")
+}
+```
+
+### Verificando as colunas com os valores vazios
+```{r column with empty values, echo=FALSE, message=FALSE, warning=FALSE}
+col_with_empty <- colnames(df_raw)[colSums(df_raw == "") > 0]
+cat("Colunas com valores vazios", sep = "\n")
+for (col in col_with_empty) {
+  if (!is.na(col)) {
+    cat(col, ": ", sum(df_raw[[col]] == ""))
+    cat("\n")
+  }
+}
+
+```
+### Removendo as colunas que não serão usadas
+Nota: As colunas que não serão usanas nas análises são:
+- ride_id
+- start_station_name
+- start_station_id
+- end_station_name
+- end_station_id
+```{r remove unecessary column, echo=FALSE, message=FALSE, warning=FALSE}
+df_raw <- select(df_raw, -c("ride_id", "start_station_name", "start_station_id", "end_station_name", "end_station_id"))
+```
+
+### Removendo as linhas com valores nulos
+```{r clean null values, echo=FALSE, message=FALSE, warning=FALSE}
+df_clean <- df_raw[complete.cases(df_raw),]
+```
+
+### Criando a coluna com os dias da semana que o ciclista retirou a bicicleta
+```{r week day, echo=FALSE, message=FALSE, warning=FALSE}
+df_clean$week_day = wday(df_clean$started_at, label = TRUE, abbr = FALSE)
+```
+
+### Criando a coluna que verifica se o ciclista tirou a bicicleta em horário de trabalho
+```{r working hour, echo=FALSE, message=FALSE, warning=FALSE}
+isWorkingHour <- function(dateTime) {
+  h <- hour(dateTime)
+  return(h >= 6 & h < 18)
+}
+df_clean$working_hour = isWorkingHour(df_clean$started_at)
+```
+
+```{r}
+colnames(df_clean)
+```
+
+
+
+### Criando a coluna que calcula a distancia percorrina pelo ciclista
+```{r distance, echo=FALSE, message=FALSE, warning=FALSE}
+deg2rad <- function(deg) {
+  return(deg * pi / 180)
+}
+distance <- function(lat1, lon1, lat2, lon2) {
+  lat1 <- deg2rad(lat1)
+  lon1 <- deg2rad(lon1)
+  lat2 <- deg2rad(lat2)
+  lon2 <- deg2rad(lon2)
+  earth_ray <- 6371
+  dlat <- lat2 - lat1
+  dlon <- lon2 - lon1
+  a <- sin(dlat/2)^2 + cos(lat1) * cos(lat2) * sin(dlon/2)^2
+  c <- 2 * asin(sqrt(a))
+  dist <- earth_ray * c
+  return(dist)
+}
+
+df_clean$distance = distance(df_clean$start_lat, df_clean$start_lng, df_clean$end_lat, df_clean$end_lng)
+```
+
