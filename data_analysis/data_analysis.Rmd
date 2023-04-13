@@ -1,0 +1,219 @@
+---
+title: "Data Analysis"
+author: "Daniel Pedrini"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+### Instanciando as bibliotecas
+
+```{r libraries, echo=FALSE, message=FALSE, warning=FALSE}
+library(dplyr)
+library(lubridate)
+library(ggplot2)
+```
+
+### Lendo o data frame final
+
+```{r loading final data frame, echo=FALSE, message=FALSE, warning=FALSE}
+data_folder <- "../data/clean/"
+files <- list.files(data_folder, pattern = ".csv", full.names = TRUE)
+df <- data.frame()
+
+
+for (file in files) {
+  data <- read.csv(file)
+  df <- bind_rows(df, data)
+}
+```
+
+# Início da Análise dos dados
+
+## Veificar o percentual de Usuários Casuais e Usuários Membros
+
+```{r percentage member and casual, echo=FALSE, message=FALSE, warning=FALSE}
+
+percentage_casual_member <- prop.table(table(df$member_casual, useNA = "no")) *100
+df_perf <- as.data.frame(percentage_casual_member)
+colnames(df_perf)  <- c("Valor", "Percentual")
+
+ggplot(df_perf, aes(x="", y= Percentual, fill = Valor))+
+  geom_bar(stat="identity", position = "dodge") +
+  geom_text(aes(label = sprintf("%.2f%%", Percentual)), vjust = -0.5, color = "black", size = 3, position = position_dodge(width = 0.7))
+  scale_fill_discrete(name="Tipos de Membros")+
+  ylab("Percentual")+
+  ylim(0,100)+
+  theme_minimal()
+```
+
+## Verificar o percentual do uso de cada tipo de bicicleta
+```{r percentage rideable type, echo=FALSE, message=FALSE, warning=FALSE}
+percentage_rideable_type <- prop.table(table(df$rideable_type, useNA = "no")) *100
+df_rideable <- as.data.frame(percentage_rideable_type)
+colnames(df_rideable)  <- c("Valor", "Percentual")
+
+ggplot(df_rideable, aes(x="", y= Percentual, fill = Valor))+
+  geom_bar(stat="identity", position = "dodge") +
+  #geom_col(width = 0.7)+
+  geom_text(aes(label = sprintf("%.2f%%", Percentual)), vjust = -0.5, color = "black", size = 3, position = position_dodge(width = 0.7))+
+  scale_fill_discrete(name="Tipos de Bicicletas")+
+  ylab("Percentual")+
+  ylim(0,100)+
+  theme_minimal()
+```
+
+## Vamos verificar a distribuição da distância percorrida pelos ciclistas
+```{r histogram distance, echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(df, aes(x = distance))+
+  geom_histogram(bins = 10)
+```
+
+## Ao observamos o gráfico acima, a grande maioria tem distância inferior a 1Km. Com isso, vamos filtrar os dados para fazermos a distribuição para essas distâncias
+```{r histogram distance less than 1km, echo=FALSE, message=FALSE, warning=FALSE}
+df_five_km <- df[df$distance <= 5,]
+```
+
+```{r histogram distance less than five km, echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(df_five_km, aes(x = distance))+
+  geom_histogram(bins = 10)
+```
+### OBS: Mesmo com esses outliers, não serão realizadas nenhuma alteração nos dados. Vamos trabalhar com as informações que temos. Todos os dados existentes são reais e já estão tratados.
+
+## Calcular as distâncias máximas, médias e mínimas percorridas
+Nota: estamos eliminando aqui os outliers. Distancias acima de 5km
+```{r summarise distance, echo=FALSE, message=FALSE, warning=FALSE}
+summarise_distance <- df[df$distance <= 5,] %>% summarise(max(distance), min(distance), mean(distance))
+print(summarise_distance)
+```
+
+
+## Calcular o percentual de usuários por dia da semana
+```{r week day , echo=FALSE, message=FALSE, warning=FALSE}
+percentage_week_day <- prop.table(table(df$week_day, useNA = "no")) *100
+df_week_day <- as.data.frame(percentage_week_day)
+colnames(df_week_day)  <- c("Valor", "Percentual")
+
+
+ggplot(df_week_day, aes(x="", y= Percentual, fill = Valor))+
+  geom_bar(stat="identity", position = "dodge") +
+  geom_text(aes(label = sprintf("%.2f%%", Percentual)), vjust = -0.5, color = "black", size = 3, position = position_dodge(width = 0.9))+
+  scale_fill_discrete(name="Dia da Semana")+
+  ylab("Percentual")+
+  ylim(0,100)+
+  theme_minimal()
+```
+## Calcular o percentual de utilização por mês
+```{r percentage month, echo=FALSE, message=FALSE, warning=FALSE}
+percentage_month <- prop.table(table(month(df$started_at), useNA = "no")) *100
+df_month <- as.data.frame(percentage_month)
+colnames(df_month)  <- c("Valor", "Percentual")
+
+
+ggplot(df_month, aes(x="", y= Percentual, fill = Valor))+
+  geom_bar(stat="identity", position = "dodge") +
+  geom_text(aes(label = sprintf("%.1f%%", Percentual)), vjust = -0.5, color = "black", size = 2.5, position = position_dodge(width = 0.9))+
+  scale_fill_discrete(name="Mês do Ano")+
+  ylab("Percentual")+
+  ylim(0,100)+
+  theme_minimal()
+```
+
+## Calcular percentual de ciclista que pegam bicicleta no horário de trabalho
+```{r}
+percentage_working_time <- prop.table(table(df$working_hour, useNA = "no")) *100
+df_working_time <- as.data.frame(percentage_working_time)
+colnames(df_working_time)  <- c("Valor", "Percentual")
+
+
+ggplot(df_working_time, aes(x="", y= Percentual, fill = Valor))+
+  geom_bar(stat="identity", position = "dodge") +
+  geom_text(aes(label = sprintf("%.1f%%", Percentual)), vjust = -0.5, color = "black", size = 2.5, position = position_dodge(width = 0.9))+
+  scale_fill_discrete(name="Hora de Trabalho")+
+  ylab("Percentual")+
+  ylim(0,100)+
+  theme_minimal()
+```
+
+# Agora vamos para análise comparativa entre os usuários membros e os usuários casuais
+
+## Verificar o percentual do uso de cada tipo de bicicleta por tipo de usuário
+Nota: Algumas observações comparativas:
+- 7% dos usuários Casuais utilizam as bicicletas para passeios com seus filhos(as), que são as docked_bikes. O mesmo comportamento não aparece nos usuários membros.
+- 5% a mais dos usuários casuais optam por bicicletas elétricas.
+
+```{r percentage rideable type per member, echo=FALSE, message=FALSE, warning=FALSE}
+percentage_rt <- prop.table(table(df$rideable_type, df$member_casual), margin = 2) *100
+df_rideable <- as.data.frame(percentage_rt)
+colnames(df_rideable) <- c("Valor", "Membro", "Percentual")
+
+ggplot(df_rideable, aes(x="", y= Percentual, fill = Valor))+
+  geom_bar(stat="identity", position = "dodge") +
+  geom_text(aes(label = sprintf("%.1f%%", Percentual)), vjust = -0.5, color = "black", size = 2.5, position = position_dodge(width = 0.9))+
+  scale_fill_discrete(name="Tipo de Bicicleta")+
+  ylab("Percentual")+
+  ylim(0,100)+
+  facet_wrap(~Membro, scales = "free_x") +
+  theme_minimal()
+```
+
+## Verificar o percetual de uso por dia de semana de forma comparativa entre casuais e membros
+Nota: Algumas observações comparativas:
+- Os usuários casuáis utilizam mais as bicicletas durante os finais de semanas (sábado e domingo) e os membros durante a semana, não usando muito durante o fim de semana
+```{r week day casual vs member, echo=FALSE, message=FALSE, warning=FALSE}
+percentage_wk <- prop.table(table(df$week_day, df$member_casual), margin = 2) *100
+df_wd <- as.data.frame(percentage_wk)
+colnames(df_wd) <- c("Valor", "Membro", "Percentual")
+
+ggplot(df_wd, aes(x="", y= Percentual, fill = Valor))+
+  geom_bar(stat="identity", position = "dodge") +
+  geom_text(aes(label = sprintf("%.1f%%", Percentual)), vjust = -0.5, color = "black", size = 2.5, position = position_dodge(width = 0.9))+
+  scale_fill_discrete(name="dia da Semana")+
+  ylab("Percentual")+
+  ylim(0,100)+
+  facet_wrap(~Membro, scales = "free_x") +
+  theme_minimal()
+```
+## Verificar o percentual de utilização por mês comparativamente
+Nota: Algumas observações comparativas:
+- Aqui vemos uma curva muito mais acentuada dos usuários casuais utilizando as bicicletas nos meses mais quentes, e períodos de férias, e os usuários membros utilizando as bicicletas de forma mais distribuídas. 
+```{r month casual vs member, echo=FALSE, message=FALSE, warning=FALSE}
+percentage_m <- prop.table(table(month(df$started_at), df$member_casual), margin = 2) *100
+df_m <- as.data.frame(percentage_m)
+colnames(df_m) <- c("Valor", "Membro", "Percentual")
+
+ggplot(df_m, aes(x="", y= Percentual, fill = Valor))+
+  geom_bar(stat="identity", position = "dodge") +
+  geom_text(aes(label = sprintf("%.1f%%", Percentual)), vjust = -0.5, color = "black", size = 2.5, position = position_dodge(width = 0.9))+
+  scale_fill_discrete(name="dia da Semana")+
+  ylab("Percentual")+
+  ylim(0,100)+
+  facet_wrap(~Membro, scales = "free_x") +
+  theme_minimal()
+```
+## Veificar percentual de uso no horário de trabalho por tipo de membro
+Nota: Algumas observações comparativas:
+- há uma diferença, mas não tão significativa. Os usuários casuais usam mais as bicicletas fora do horário comercial, 6% a mais, que os usuários membros
+```{r working time casual vs member, echo=FALSE, message=FALSE, warning=FALSE}
+percentage_wt <- prop.table(table(df$working_hour, df$member_casual), margin = 2) *100
+df_wt <- as.data.frame(percentage_wt)
+colnames(df_wt) <- c("Valor", "Membro", "Percentual")
+
+ggplot(df_wt, aes(x="", y= Percentual, fill = Valor))+
+  geom_bar(stat="identity", position = "dodge") +
+  geom_text(aes(label = sprintf("%.1f%%", Percentual)), vjust = -0.5, color = "black", size = 2.5, position = position_dodge(width = 0.9))+
+  scale_fill_discrete(name="Horário de Trabalho")+
+  ylab("Percentual")+
+  ylim(0,100)+
+  facet_wrap(~Membro, scales = "free_x") +
+  theme_minimal()
+```
+## Verificar a distancia maxima, minima e media por tipo de membro
+Nota: Algumas observações comparativas:
+- Em termos de distância, não há discrepância entre os usuários casuais e os usuários membros relevantes.
+```{r}
+summarise_distance_member <- df %>% filter(distance < 5 & member_casual == "member") %>% summarise(max_distance = max(distance), min_distance = min(distance), mean_distance = mean(distance))
+summarise_distance_casual <- df %>% filter(distance < 5 & member_casual == "casual") %>% summarise(max_distance = max(distance), min_distance = min(distance), mean_distance = mean(distance))
+print(summarise_distance_member)
+print(summarise_distance_casual)
+```
+
