@@ -103,3 +103,29 @@ distance <- function(lat1, lon1, lat2, lon2) {
 df_clean$distance = distance(df_clean$start_lat, df_clean$start_lng, df_clean$end_lat, df_clean$end_lng)
 ```
 
+### Verificando outliers na distâncias
+```{r outliers distance, echo=FALSE, message=FALSE, warning=FALSE}
+df_clean[df_clean$distance > 45, ]
+```
+
+### Apagando as linhas com os outliers com distâncias acima de 45Km
+```{r remove outliers, echo=FALSE, message=FALSE, warning=FALSE}
+df_clean <- df_clean[df_clean$distance < 45,]
+```
+
+### Removendo as colunas de latitude e longitude, que foram utilizadas somente para cáculos de distancias
+```{r}
+df_final <- select(df_clean, -c("start_lat", "start_lng", "end_lat", "end_lng"))
+```
+
+### Verificando o data frame final apos a limpeza e preparação para a analise
+```{r checking final data frame, echo=FALSE, message=FALSE, warning=FALSE}
+head(df_final)
+colnames(df_final)
+```
+### Gravando o data frame final em um arquivo CSV para utilização futura
+```{r saving data frame final, echo=FALSE, message=FALSE, warning=FALSE}
+file_name <- "../data/clean/20230413_data_frame_final.csv"
+write.csv(df_final,file_name, row.names = FALSE)
+```
+
