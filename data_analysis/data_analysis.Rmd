@@ -39,7 +39,7 @@ colnames(df_perf)  <- c("Valor", "Percentual")
 
 ggplot(df_perf, aes(x="", y= Percentual, fill = Valor))+
   geom_bar(stat="identity", position = "dodge") +
-  geom_text(aes(label = sprintf("%.2f%%", Percentual)), vjust = -0.5, color = "black", size = 3, position = position_dodge(width = 0.7))
+  geom_text(aes(label = sprintf("%.2f%%", Percentual)), vjust = -0.5, color = "black", size = 3, position = position_dodge(width = 0.7))+
   scale_fill_discrete(name="Tipos de Membros")+
   ylab("Percentual")+
   ylim(0,100)+
